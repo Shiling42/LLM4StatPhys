@@ -77,9 +77,16 @@ The model includes:
 
 2. **Mutation**: Offspring may have mutations in their genetic parameter: $$\phi_{\text{offspring}} = (\phi_{\text{parent}} + \Delta\phi) \mod 2\pi$$ Where $\Delta\phi$ is drawn from a uniform distribution $[-s_{\text{mut}} \cdot \pi, s_{\text{mut}} \cdot \pi]$, and $s_{\text{mut}}$ is the mutation strength.
 
-3. **Selection**: Each agent's survival probability depends on genetic compatibility with neighbors: $$p_{\text{survival}} = 1 + s_{\text{sel}} \cdot \frac{1}{|\mathcal{N}*i|} \sum*{j \in \mathcal{N}*i} f(d*{ij})$$
+3. **Selection**: Each agent's survival probability depends on genetic compatibility with neighbors: 
+   
+   $$
+   p_{\text{survival}} = 1 + s_{\text{sel}} \cdot \frac{1}{|\mathcal{N}*i|} \sum*{j \in \mathcal{N}*i} f(d*{ij})
+   $$
 
-   Where $f(d_{ij})$ is positive for similar agents and negative for dissimilar agents: $$f(d_{ij}) = \begin{cases} 1 - d_{ij}/d_{\text{threshold}} & \text{if } d_{ij} < d_{\text{threshold}} \ -(d_{ij} - d_{\text{threshold}})/(1 - d_{\text{threshold}}) & \text{if } d_{ij} \geq d_{\text{threshold}} \end{cases}$$
+   Where $f(d_{ij})$ is positive for similar agents and negative for dissimilar agents: 
+   $$
+   f(d_{ij}) = \begin{cases} 1 - d_{ij}/d_{\text{threshold}} & \text{if } d_{ij} < d_{\text{threshold}} \ -(d_{ij} - d_{\text{threshold}})/(1 - d_{\text{threshold}}) & \text{if } d_{ij} \geq d_{\text{threshold}} \end{cases}
+   $$
 
 ### Order Parameter
 
