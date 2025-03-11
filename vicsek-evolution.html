@@ -1,44 +1,3 @@
-            // Evolve velocity checkbox
-            document.getElementById('evolveVelocity').addEventListener('change', function() {
-                params.evolveVelocity = this.checked;
-                if (!this.checked) {
-                    // Reset all agents to base velocity
-                    for (const agent of agents) {
-                        agent.velocity = params.velocity;
-                    }
-                }
-            });
-            
-            // Evolve alignment checkbox
-            document.getElementById('evolveAlignment').addEventListener('change', function() {
-                params.evolveAlignment = this.checked;
-                if (!this.checked) {
-                    // Reset all agents to base alignment parameters
-                    for (const agent of agents) {
-                        agent.alignmentStrength = params.alignmentStrength;
-                    }
-                }
-            });            // Evolve velocity checkbox
-            document.getElementById('evolveVelocity').addEventListener('change', function() {
-                params.evolveVelocity = this.checked;
-                if (!this.checked) {
-                    // Reset all agents to base velocity
-                    for (const agent of agents) {
-                        agent.velocity = params.velocity;
-                    }
-                }
-            });
-            
-            // Evolve alignment checkbox
-            document.getElementById('evolveAlignment').addEventListener('change', function() {
-                params.evolveAlignment = this.checked;
-                if (!this.checked) {
-                    // Reset all agents to base alignment parameters
-                    for (const agent of agents) {
-                        agent.alignmentStrength = params.alignmentStrength;
-                    }
-                }
-            });<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -156,7 +115,7 @@
     </style>
 </head>
 <body>
-    <h1>Symmetric Evolutionary Vicsek Model</h1>
+    <h1>Evolutionary Vicsek Model</h1>
     <div class="container">
         <div class="simulation">
             <div class="stats">
@@ -288,18 +247,18 @@
         // Simulation parameters
         const params = {
             initialPopulation: 200,
-            initialDiversity: 0.2,
+            initialDiversity: 0.6,
             velocity: 1,
             interactionRadius: 50,
-            noiseLevel: 0.3,
-            alignmentStrength: 0.8,
+            noiseLevel: 0.5,
+            alignmentStrength: 0.5,
             geneticThreshold: 0.2,
             pairwiseInteraction: true,
             replicationRate: 0.005, // Lower replication rate
-            mutationRate: 0.2,
-            mutationStrength: 0.1, // Increased mutation strength
+            mutationRate: 0.8,
+            mutationStrength: 0.23, // Increased mutation strength
             selectionStrength: 0.15, // Increased selection strength
-            maxCapacity: 500,
+            maxCapacity: 800,
             evolveVelocity: true,
             evolveAlignment: true
         };
@@ -1156,14 +1115,12 @@
             document.getElementById('selectionStrength').addEventListener('input', function() {
                 params.selectionStrength = parseFloat(this.value);
                 document.getElementById('selectionStrengthValue').textContent = params.selectionStrength;
-            });
-            
+            });            
             // Max capacity slider
             document.getElementById('maxCapacity').addEventListener('input', function() {
                 params.maxCapacity = parseInt(this.value);
                 document.getElementById('maxCapacityValue').textContent = params.maxCapacity;
-            });
-        }
+            });        }
         
         // Initialize everything when the page loads
         window.onload = function() {
@@ -1173,3 +1130,4 @@
     </script>
 </body>
 </html>
+
