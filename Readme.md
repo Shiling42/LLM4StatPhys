@@ -32,7 +32,9 @@ Each agent $i$ is characterized by:
 
 Agents move with constant speed $v$ according to:
 
-$$\vec{r}_i(t+1) = \vec{r}_i(t) + v \begin{pmatrix} \cos \theta_i(t) \ \sin \theta_i(t) \end{pmatrix}$$
+$$
+\vec{r}_i(t+1) = \vec{r}_i(t) + v \begin{pmatrix} \cos \theta_i(t) \ \sin \theta_i(t) \end{pmatrix}
+$$
 
 With periodic boundary conditions applied to keep agents within the simulation area.
 
