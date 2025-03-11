@@ -1,0 +1,1175 @@
+            // Evolve velocity checkbox
+            document.getElementById('evolveVelocity').addEventListener('change', function() {
+                params.evolveVelocity = this.checked;
+                if (!this.checked) {
+                    // Reset all agents to base velocity
+                    for (const agent of agents) {
+                        agent.velocity = params.velocity;
+                    }
+                }
+            });
+            
+            // Evolve alignment checkbox
+            document.getElementById('evolveAlignment').addEventListener('change', function() {
+                params.evolveAlignment = this.checked;
+                if (!this.checked) {
+                    // Reset all agents to base alignment parameters
+                    for (const agent of agents) {
+                        agent.alignmentStrength = params.alignmentStrength;
+                    }
+                }
+            });            // Evolve velocity checkbox
+            document.getElementById('evolveVelocity').addEventListener('change', function() {
+                params.evolveVelocity = this.checked;
+                if (!this.checked) {
+                    // Reset all agents to base velocity
+                    for (const agent of agents) {
+                        agent.velocity = params.velocity;
+                    }
+                }
+            });
+            
+            // Evolve alignment checkbox
+            document.getElementById('evolveAlignment').addEventListener('change', function() {
+                params.evolveAlignment = this.checked;
+                if (!this.checked) {
+                    // Reset all agents to base alignment parameters
+                    for (const agent of agents) {
+                        agent.alignmentStrength = params.alignmentStrength;
+                    }
+                }
+            });<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Symmetric Evolutionary Vicsek Model</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .simulation {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 20px;
+            flex: 2;
+            min-width: 600px;
+        }
+        .controls {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 20px;
+            flex: 1;
+            min-width: 300px;
+        }
+        h1, h2, h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        canvas {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: #000;
+            display: block;
+            margin: 0 auto;
+        }
+        .control-group {
+            margin-bottom: 20px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 15px;
+        }
+        .control-item {
+            margin-bottom: 10px;
+        }
+        label {
+            display: inline-block;
+            width: 200px;
+            margin-right: 10px;
+        }
+        input[type="range"] {
+            width: 150px;
+            vertical-align: middle;
+        }
+        .value-display {
+            display: inline-block;
+            width: 40px;
+            text-align: right;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+            font-size: 14px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .reset {
+            background-color: #f44336;
+        }
+        .reset:hover {
+            background-color: #d32f2f;
+        }
+        .stats {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 15px;
+        }
+        .polarplot {
+            margin: 15px auto;
+            text-align: center;
+        }
+        .metric {
+            margin: 10px 0;
+            font-weight: bold;
+        }
+        .order-parameter {
+            font-size: 18px;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        #phaseIndicator {
+            padding: 10px;
+            border-radius: 5px;
+            background-color: #ddd;
+            text-align: center;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Symmetric Evolutionary Vicsek Model</h1>
+    <div class="container">
+        <div class="simulation">
+            <div class="stats">
+                <div class="order-parameter">
+                    Genetic Order Parameter: <span id="orderParameter">0.0</span>
+                </div>
+                <div id="phaseIndicator">Phase: Determining...</div>
+            </div>
+            <canvas id="simulationCanvas" width="600" height="600"></canvas>
+            <div class="polarplot">
+                <canvas id="geneticPolarPlot" width="300" height="300"></canvas>
+                <div>Genetic Parameter Distribution (Circular)</div>
+            </div>
+            <div class="metrics">
+                <div class="metric">Population: <span id="populationSize">0</span></div>
+                <div class="metric">Genetic Clusters: <span id="clusterCount">0</span></div>
+            <div class="metric">Alignment Behavior: <span id="alignmentDescription">Initializing...</span></div>
+            </div>
+        </div>
+        <div class="controls">
+            <h2>Simulation Controls</h2>
+            
+            <div class="control-group">
+                <h3>Simulation Settings</h3>
+                <div class="control-item">
+                    <button id="playPauseBtn">Pause</button>
+                    <button id="resetBtn" class="reset">Reset</button>
+                </div>
+                <div class="control-item">
+                    <label for="initialPopulation">Initial Population:</label>
+                    <input type="range" id="initialPopulation" min="50" max="500" value="200" step="10">
+                    <span class="value-display" id="initialPopulationValue">200</span>
+                </div>
+                <div class="control-item">
+                    <label for="initialDiversity">Initial Diversity:</label>
+                    <input type="range" id="initialDiversity" min="0.1" max="1" value="0.2" step="0.1">
+                    <span class="value-display" id="initialDiversityValue">0.2</span>
+                </div>
+            </div>
+            
+            <div class="control-group">
+                <h3>Movement Parameters</h3>
+                <div class="control-item">
+                    <label for="velocity">Velocity:</label>
+                    <input type="range" id="velocity" min="0.5" max="3" value="1" step="0.1">
+                    <span class="value-display" id="velocityValue">1</span>
+                </div>
+                <div class="control-item">
+                    <label for="interactionRadius">Interaction Radius:</label>
+                    <input type="range" id="interactionRadius" min="20" max="100" value="50" step="5">
+                    <span class="value-display" id="interactionRadiusValue">50</span>
+                </div>
+                <div class="control-item">
+                    <label for="noiseLevel">Noise Level:</label>
+                    <input type="range" id="noiseLevel" min="0" max="1" value="0.3" step="0.05">
+                    <span class="value-display" id="noiseLevelValue">0.3</span>
+                </div>
+            </div>
+            
+            <div class="control-group">
+                <h3>Alignment Parameters</h3>
+                <div class="control-item">
+                    <label for="alignmentStrength">Alignment Strength:</label>
+                    <input type="range" id="alignmentStrength" min="0" max="1" value="0.8" step="0.1">
+                    <span class="value-display" id="alignmentStrengthValue">0.8</span>
+                </div>
+                <div class="control-item">
+                    <label for="geneticThreshold">Genetic Threshold:</label>
+                    <input type="range" id="geneticThreshold" min="0.05" max="0.5" value="0.2" step="0.05">
+                    <span class="value-display" id="geneticThresholdValue">0.2</span>
+                    <div style="margin-left: 200px; font-size: 0.8em; color: #666;">
+                        (Lower values create more distinct species)
+                    </div>
+                </div>
+                <div class="control-item">
+                    <label for="pairwiseInteraction">Pairwise Interaction:</label>
+                    <input type="checkbox" id="pairwiseInteraction" checked>
+                    <span class="description">(vs. average direction)</span>
+                </div>
+
+            </div>
+            
+            <div class="control-group">
+                <h3>Evolutionary Parameters</h3>
+                <div class="control-item">
+                    <label for="replicationRate">Replication Rate:</label>
+                    <input type="range" id="replicationRate" min="0" max="0.05" value="0.005" step="0.001">
+                    <span class="value-display" id="replicationRateValue">0.005</span>
+                </div>
+                <div class="control-item">
+                    <label for="mutationRate">Mutation Rate:</label>
+                    <input type="range" id="mutationRate" min="0" max="1" value="0.2" step="0.1">
+                    <span class="value-display" id="mutationRateValue">0.2</span>
+                </div>
+                <div class="control-item">
+                    <label for="mutationStrength">Mutation Strength:</label>
+                    <input type="range" id="mutationStrength" min="0" max="0.3" value="0.1" step="0.01">
+                    <span class="value-display" id="mutationStrengthValue">0.1</span>
+                </div>
+                <div class="control-item">
+                    <label for="selectionStrength">Selection Strength:</label>
+                    <input type="range" id="selectionStrength" min="0" max="0.3" value="0.15" step="0.01">
+                    <span class="value-display" id="selectionStrengthValue">0.15</span>
+                </div>
+                <div class="control-item">
+                    <label for="maxCapacity">Max Capacity:</label>
+                    <input type="range" id="maxCapacity" min="200" max="1000" value="500" step="50">
+                    <span class="value-display" id="maxCapacityValue">500</span>
+                </div>
+                <div class="control-item">
+                    <label for="evolveVelocity">Evolve Velocity:</label>
+                    <input type="checkbox" id="evolveVelocity" checked>
+                    <span style="margin-left: 10px; font-size: 0.8em;">
+                        (Agents evolve different movement speeds)
+                    </span>
+                </div>
+                <div class="control-item">
+                    <label for="evolveAlignment">Evolve Alignment:</label>
+                    <input type="checkbox" id="evolveAlignment" checked>
+                    <span style="margin-left: 10px; font-size: 0.8em;">
+                        (Agents evolve different alignment strengths)
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Simulation parameters
+        const params = {
+            initialPopulation: 200,
+            initialDiversity: 0.2,
+            velocity: 1,
+            interactionRadius: 50,
+            noiseLevel: 0.3,
+            alignmentStrength: 0.8,
+            geneticThreshold: 0.2,
+            pairwiseInteraction: true,
+            replicationRate: 0.005, // Lower replication rate
+            mutationRate: 0.2,
+            mutationStrength: 0.1, // Increased mutation strength
+            selectionStrength: 0.15, // Increased selection strength
+            maxCapacity: 500,
+            evolveVelocity: true,
+            evolveAlignment: true
+        };
+
+        // Simulation state
+        let agents = [];
+        let running = true;
+        let simulationCanvas, simCtx, polarCanvas, polarCtx;
+        let orderParameter = 0;
+        let clusterCount = 0;
+        const TWO_PI = 2 * Math.PI;
+        
+        // Initialize the simulation
+        function init() {
+            // Get canvases and contexts
+            simulationCanvas = document.getElementById('simulationCanvas');
+            simCtx = simulationCanvas.getContext('2d');
+            
+            polarCanvas = document.getElementById('geneticPolarPlot');
+            polarCtx = polarCanvas.getContext('2d');
+            
+            // Create initial agents
+            createInitialAgents();
+            
+            // Start animation loop
+            requestAnimationFrame(animate);
+            
+            // Update UI elements to match parameters
+            updateUIFromParams();
+        }
+        
+        // Create initial agent population
+        function createInitialAgents() {
+            agents = [];
+            
+            for (let i = 0; i < params.initialPopulation; i++) {
+                let geneticParam;
+                
+                if (params.initialDiversity <= 0.3) {
+                    // Low diversity - create a few clusters
+                    const numClusters = 2 + Math.floor(params.initialDiversity * 10);
+                    const clusterIndex = Math.floor(Math.random() * numClusters);
+                    geneticParam = (clusterIndex / numClusters) * TWO_PI;
+                    
+                    // Add some noise within the cluster
+                    geneticParam += (Math.random() - 0.5) * 0.5;
+                    geneticParam = (geneticParam + TWO_PI) % TWO_PI; // Ensure it wraps correctly
+                } else {
+                    // High diversity - more uniform distribution
+                    geneticParam = Math.random() * TWO_PI;
+                }
+                
+                // Create more diverse initial population for velocity and alignment
+                // This will make evolution more visible
+                const agent = {
+                    x: Math.random() * simulationCanvas.width,
+                    y: Math.random() * simulationCanvas.height,
+                    theta: Math.random() * TWO_PI, // Movement direction
+                    geneticParam: geneticParam, // Circular genetic parameter (0 to 2π)
+                    velocity: params.velocity * (0.6 + Math.random() * 0.8), // More varied initial velocity (0.6x to 1.4x base)
+                    alignmentStrength: params.alignmentStrength * (0.6 + Math.random() * 0.8), // More varied alignment strength
+                    geneticThreshold: params.geneticThreshold, // Use global genetic threshold
+                    age: 0
+                };
+                agents.push(agent);
+            }
+        }
+        
+        // Calculate circular distance between two genetic parameters
+        function geneticDistance(param1, param2) {
+            // Distance on a circle (minimum of clockwise and counterclockwise)
+            const rawDistance = Math.abs(param1 - param2);
+            return Math.min(rawDistance, TWO_PI - rawDistance);
+        }
+        
+        // Calculate alignment strength based on genetic distance
+        function calculateAlignmentStrength(agent1, agent2) {
+            const distance = geneticDistance(agent1.geneticParam, agent2.geneticParam);
+            
+            // Normalize to [0,1] range for threshold comparison
+            const normalizedDistance = distance / Math.PI;
+            
+            // If distance is less than threshold, align; otherwise, anti-align
+            // Using a smooth transition function (cosine) for continuity
+            if (normalizedDistance < params.geneticThreshold) {
+                // Full alignment when identical, decreasing as distance approaches threshold
+                return params.alignmentStrength * (1 - normalizedDistance / params.geneticThreshold);
+            } else {
+                // Negative alignment (repulsion) when distance exceeds threshold
+                // Strength depends on how far beyond threshold, max negative at ~2*threshold
+                const antiAlignFactor = Math.min(1, (normalizedDistance - params.geneticThreshold) / params.geneticThreshold);
+                return -params.alignmentStrength * antiAlignFactor;
+            }
+        }
+        
+        // Get color based on genetic parameter (color wheel)
+        function getColorFromParameter(param) {
+            // Map parameter (0-2π) to hue (0-360)
+            const hue = Math.floor((param / TWO_PI) * 360);
+            return `hsl(${hue}, 100%, 50%)`;
+        }
+        
+        // Main animation loop
+        function animate() {
+            if (running) {
+                update();
+                render();
+                updatePolarPlot();
+                calculateOrderParameter();
+                detectClusters();
+                updatePhaseIndicator();
+            }
+            requestAnimationFrame(animate);
+        }
+        
+        // Update agent positions and states
+        function update() {
+            const nextAgents = [];
+            const width = simulationCanvas.width;
+            const height = simulationCanvas.height;
+            
+            // Update each agent
+            for (let i = 0; i < agents.length; i++) {
+                const agent = agents[i];
+                agent.age += 1;
+                
+                // Find neighbors within interaction radius
+                const neighbors = [];
+                
+                for (let j = 0; j < agents.length; j++) {
+                    if (i === j) continue;
+                    
+                    const neighbor = agents[j];
+                    // Calculate distance with periodic boundary conditions
+                    const dx = Math.min(
+                        Math.abs(agent.x - neighbor.x),
+                        Math.abs(agent.x - neighbor.x + width),
+                        Math.abs(agent.x - neighbor.x - width)
+                    );
+                    const dy = Math.min(
+                        Math.abs(agent.y - neighbor.y),
+                        Math.abs(agent.y - neighbor.y + height),
+                        Math.abs(agent.y - neighbor.y - height)
+                    );
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    // Using shared interaction radius parameter, not individual
+                    if (distance < params.interactionRadius) {
+                        neighbors.push(neighbor);
+                    }
+                }
+                
+                // Calculate new direction based on neighbors and alignment preferences
+                let sinSum = 0;
+                let cosSum = 0;
+                
+                if (neighbors.length > 0) {
+                    if (params.pairwiseInteraction) {
+                        // Pairwise interaction model (more physically realistic)
+                        for (const neighbor of neighbors) {
+                            // Calculate alignment strength based on genetic distance
+                            const alignmentStrength = calculateAlignmentStrength(agent, neighbor);
+                            
+                            // Add neighbor's direction weighted by alignment strength
+                            if (alignmentStrength >= 0) {
+                                // Positive alignment: move in similar direction
+                                // Similar genetic parameters cause alignment
+                                sinSum += alignmentStrength * Math.sin(neighbor.theta);
+                                cosSum += alignmentStrength * Math.cos(neighbor.theta);
+                            } else {
+                                // Negative alignment: move away from direction
+                                // Different genetic parameters cause anti-alignment (move in opposite direction)
+                                // Using the opposite direction (adding π rotates by 180°)
+                                const antiAlignStrength = Math.abs(alignmentStrength);
+                                sinSum += antiAlignStrength * Math.sin(neighbor.theta + Math.PI);
+                                cosSum += antiAlignStrength * Math.cos(neighbor.theta + Math.PI);
+                            }
+                        }
+                    } else {
+                        // Average direction model (classic Vicsek)
+                        // First, find the average direction of all neighbors
+                        let neighborSinSum = 0;
+                        let neighborCosSum = 0;
+                        
+                        for (const neighbor of neighbors) {
+                            neighborSinSum += Math.sin(neighbor.theta);
+                            neighborCosSum += Math.cos(neighbor.theta);
+                        }
+                        
+                        const avgTheta = Math.atan2(neighborSinSum, neighborCosSum);
+                        
+                        // Then calculate an "average" alignment based on all neighbors
+                        let totalWeight = 0;
+                        let netAlignment = 0;
+                        
+                        for (const neighbor of neighbors) {
+                            const alignmentStrength = calculateAlignmentStrength(agent, neighbor);
+                            netAlignment += alignmentStrength;
+                            totalWeight += Math.abs(alignmentStrength);
+                        }
+                        
+                        // Normalize the net alignment by total weight
+                        if (totalWeight > 0) {
+                            netAlignment /= totalWeight;
+                        }
+                        
+                        // Apply the average direction with the net alignment strength
+                        if (netAlignment >= 0) {
+                            sinSum += netAlignment * Math.sin(avgTheta);
+                            cosSum += netAlignment * Math.cos(avgTheta);
+                        } else {
+                            sinSum += netAlignment * Math.sin(avgTheta + Math.PI);
+                            cosSum += netAlignment * Math.cos(avgTheta + Math.PI);
+                        }
+                    }
+                }
+                
+                // Add current direction (self-alignment)
+                sinSum += Math.sin(agent.theta);
+                cosSum += Math.cos(agent.theta);
+                
+                // Calculate new direction
+                let newTheta = Math.atan2(sinSum, cosSum);
+                
+                // Add noise to direction
+                newTheta += (Math.random() - 0.5) * params.noiseLevel * Math.PI;
+                
+                // Update agent position with periodic boundary conditions
+                let newX = agent.x + agent.velocity * Math.cos(newTheta);
+                let newY = agent.y + agent.velocity * Math.sin(newTheta);
+                
+                // Apply periodic boundary conditions
+                newX = (newX + width) % width;
+                newY = (newY + height) % height;
+                
+                // Create updated agent
+                const updatedAgent = {
+                    x: newX,
+                    y: newY,
+                    theta: newTheta,
+                    geneticParam: agent.geneticParam,
+                    velocity: agent.velocity,
+                    alignmentStrength: agent.alignmentStrength,
+                    geneticThreshold: params.geneticThreshold,
+                    age: agent.age
+                };
+                
+                nextAgents.push(updatedAgent);
+                
+                // Reproduction with mutation
+                if (Math.random() < params.replicationRate && agents.length < params.maxCapacity) {
+                    // Create offspring with possible mutations
+                    let offspringGeneticParam = agent.geneticParam;
+                    let offspringVelocity = agent.velocity;
+                    let offspringAlignmentStrength = agent.alignmentStrength;
+                    let offspringGeneticThreshold = agent.geneticThreshold;
+                    
+                    // Apply mutations to genetic parameter
+                    if (Math.random() < params.mutationRate) {
+                        // Add random change to genetic parameter on the circle
+                        offspringGeneticParam += (Math.random() - 0.5) * TWO_PI * params.mutationStrength;
+                        
+                        // Ensure it stays within [0, 2π) by wrapping
+                        offspringGeneticParam = (offspringGeneticParam + TWO_PI) % TWO_PI;
+                    }
+                    
+                    // Apply mutations to velocity if enabled
+                    if (params.evolveVelocity && Math.random() < params.mutationRate) {
+                        // More significant velocity mutations (up to ±25% of base velocity)
+                        offspringVelocity += (Math.random() - 0.5) * 2 * params.mutationStrength * params.velocity * 2.5;
+                        // Allow wider range (0.4x to 2.5x base velocity)
+                        offspringVelocity = Math.max(params.velocity * 0.4, Math.min(params.velocity * 2.5, offspringVelocity));
+                    } else {
+                        offspringVelocity = params.velocity;
+                    }
+                    
+                    // Apply mutations to alignment strength if enabled
+                    if (params.evolveAlignment && Math.random() < params.mutationRate) {
+                        // More significant alignment strength mutations
+                        offspringAlignmentStrength += (Math.random() - 0.5) * 2 * params.mutationStrength * params.alignmentStrength * 2;
+                        offspringAlignmentStrength = Math.max(0.05, Math.min(1.5, offspringAlignmentStrength));
+                    } else {
+                        offspringAlignmentStrength = params.alignmentStrength;
+                    }
+                    
+                    // Always use the global genetic threshold parameter
+                    offspringGeneticThreshold = params.geneticThreshold;
+                    
+                    const offspring = {
+                        x: (newX + (Math.random() - 0.5) * 10 + width) % width,
+                        y: (newY + (Math.random() - 0.5) * 10 + height) % height,
+                        theta: newTheta + (Math.random() - 0.5) * Math.PI / 2,
+                        geneticParam: offspringGeneticParam,
+                        velocity: offspringVelocity,
+                        alignmentStrength: offspringAlignmentStrength,
+                        geneticThreshold: offspringGeneticThreshold,
+                        age: 0
+                    };
+                    
+                    nextAgents.push(offspring);
+                }
+            }
+            
+            // Apply selection based on genetic compatibility with neighbors
+            const finalAgents = [];
+            const totalAgents = nextAgents.length;
+            
+            for (const agent of nextAgents) {
+                // Find neighbors within interaction radius
+                const neighbors = [];
+                
+                for (const other of nextAgents) {
+                    if (agent === other) continue;
+                    
+                    const dx = Math.min(
+                        Math.abs(agent.x - other.x),
+                        Math.abs(agent.x - other.x + simulationCanvas.width),
+                        Math.abs(agent.x - other.x - simulationCanvas.width)
+                    );
+                    const dy = Math.min(
+                        Math.abs(agent.y - other.y),
+                        Math.abs(agent.y - other.y + simulationCanvas.height),
+                        Math.abs(agent.y - other.y - simulationCanvas.height)
+                    );
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (distance < params.interactionRadius) {
+                        neighbors.push(other);
+                    }
+                }
+                
+                // Calculate fitness based on genetic compatibility with neighbors
+                let fitness = 1.0;
+                
+                if (neighbors.length > 0) {
+                    let compatibilitySum = 0;
+                    
+                    for (const neighbor of neighbors) {
+                        const distance = geneticDistance(agent.geneticParam, neighbor.geneticParam);
+                        const normalizedDistance = distance / Math.PI;
+                        
+                        // Higher fitness when surrounded by genetically similar agents
+                        if (normalizedDistance < params.geneticThreshold) {
+                            // Bonus for being with similar agents
+                            compatibilitySum += 1 - normalizedDistance / params.geneticThreshold;
+                        } else {
+                            // Penalty for being with dissimilar agents
+                            compatibilitySum -= (normalizedDistance - params.geneticThreshold) / (1 - params.geneticThreshold);
+                        }
+                    }
+                    
+                    // Average compatibility and scale by selection strength
+                    const avgCompatibility = compatibilitySum / neighbors.length;
+                    // Make selection more significant by applying a higher factor
+                    fitness += avgCompatibility * params.selectionStrength * 2;
+                }
+                
+                // Population pressure increases with total population
+                const populationPressure = Math.max(0, totalAgents / params.maxCapacity - 0.7);
+                fitness -= populationPressure * 0.2;
+                
+                // Basic aging effect
+                const ageDegradation = 0.0005 * Math.min(1, agent.age / 1000);
+                fitness -= ageDegradation;
+                
+                // Ensure fitness is a valid probability
+                fitness = Math.max(0, Math.min(1, fitness));
+                
+                // Survival based on fitness
+                if (Math.random() < fitness) {
+                    finalAgents.push(agent);
+                }
+            }
+            
+            agents = finalAgents;
+            
+            // Update population display
+            document.getElementById('populationSize').textContent = agents.length;
+        }
+        
+        // Render the simulation state
+        function render() {
+            // Clear canvas
+            simCtx.fillStyle = '#111';
+            simCtx.fillRect(0, 0, simulationCanvas.width, simulationCanvas.height);
+            
+            // Draw agents
+            for (const agent of agents) {
+                // Draw agent body with color based on genetic parameter
+                simCtx.fillStyle = getColorFromParameter(agent.geneticParam);
+                
+                // Size represents velocity (faster = larger)
+                // Make size differences more pronounced
+                const size = 2 + (agent.velocity / params.velocity) * 4;
+                
+                simCtx.beginPath();
+                simCtx.arc(agent.x, agent.y, size, 0, TWO_PI);
+                simCtx.fill();
+                
+                // Draw direction indicator
+                simCtx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+                simCtx.beginPath();
+                simCtx.moveTo(agent.x, agent.y);
+                
+                // Draw direction line with length proportional to velocity
+                const lineLength = 6 + (agent.velocity / params.velocity) * 8;
+                simCtx.lineTo(
+                    agent.x + lineLength * Math.cos(agent.theta),
+                    agent.y + lineLength * Math.sin(agent.theta)
+                );
+                simCtx.stroke();
+                
+                // Visualize alignment strength as a thin circle around agents
+                // Only for agents with extreme alignment strength (very high or very low)
+                if (Math.abs(agent.alignmentStrength - params.alignmentStrength) > 0.3) {
+                    const alignmentRatio = agent.alignmentStrength / params.alignmentStrength;
+                    // Draw circle showing alignment strength - red for low alignment, blue for high
+                    if (alignmentRatio < 0.7) {
+                        // Low alignment strength - red circle
+                        simCtx.strokeStyle = 'rgba(255, 50, 50, 0.3)';
+                    } else if (alignmentRatio > 1.3) {
+                        // High alignment strength - blue circle
+                        simCtx.strokeStyle = 'rgba(50, 50, 255, 0.3)';
+                    }
+                    
+                    // Draw the alignment indicator circle
+                    if (alignmentRatio < 0.7 || alignmentRatio > 1.3) {
+                        simCtx.beginPath();
+                        simCtx.arc(agent.x, agent.y, size + 3, 0, TWO_PI);
+                        simCtx.stroke();
+                    }
+                }
+            }
+        }
+        
+        // Update the polar plot of genetic parameters
+        function updatePolarPlot() {
+            const width = polarCanvas.width;
+            const height = polarCanvas.height;
+            const centerX = width / 2;
+            const centerY = height / 2;
+            const radius = Math.min(centerX, centerY) - 20;
+            
+            // Clear canvas
+            polarCtx.fillStyle = '#f5f5f5';
+            polarCtx.fillRect(0, 0, width, height);
+            
+            // Draw circular background
+            polarCtx.fillStyle = '#eee';
+            polarCtx.beginPath();
+            polarCtx.arc(centerX, centerY, radius, 0, TWO_PI);
+            polarCtx.fill();
+            
+            // Draw circular grid lines
+            polarCtx.strokeStyle = '#ddd';
+            polarCtx.beginPath();
+            polarCtx.arc(centerX, centerY, radius * 0.33, 0, TWO_PI);
+            polarCtx.stroke();
+            
+            polarCtx.beginPath();
+            polarCtx.arc(centerX, centerY, radius * 0.66, 0, TWO_PI);
+            polarCtx.stroke();
+            
+            // Draw radial grid lines
+            for (let angle = 0; angle < TWO_PI; angle += Math.PI / 4) {
+                polarCtx.beginPath();
+                polarCtx.moveTo(centerX, centerY);
+                polarCtx.lineTo(
+                    centerX + radius * Math.cos(angle),
+                    centerY + radius * Math.sin(angle)
+                );
+                polarCtx.stroke();
+            }
+            
+            // Calculate genetic parameter distribution histogram
+            const bins = 60;
+            const histogramBins = Array(bins).fill(0);
+            
+            for (const agent of agents) {
+                const bin = Math.floor((agent.geneticParam / TWO_PI) * bins) % bins;
+                histogramBins[bin]++;
+            }
+            
+            // Find maximum bin count for scaling
+            const maxCount = Math.max(1, ...histogramBins);
+            
+            // Plot genetic parameters as points on the circle with size indicating velocity
+            for (const agent of agents) {
+                const angle = agent.geneticParam;
+                // Base dot size on velocity
+                const dotRadius = 2 + (agent.velocity / params.velocity) * 2;
+                
+                // Color intensity based on alignment strength
+                const alignmentRatio = agent.alignmentStrength / params.alignmentStrength;
+                const baseColor = getColorFromParameter(agent.geneticParam);
+                
+                // Adjust the color based on alignment strength
+                let dotColor = baseColor;
+                if (alignmentRatio > 1.2) {
+                    // Stronger alignment - more vivid color
+                    dotColor = makeColorMoreVivid(baseColor);
+                } else if (alignmentRatio < 0.8) {
+                    // Weaker alignment - paler color
+                    dotColor = makeColorPaler(baseColor);
+                }
+                
+                polarCtx.fillStyle = dotColor;
+                polarCtx.beginPath();
+                polarCtx.arc(
+                    centerX + radius * 0.8 * Math.cos(angle),
+                    centerY + radius * 0.8 * Math.sin(angle),
+                    dotRadius, 0, TWO_PI
+                );
+                polarCtx.fill();
+            }
+            
+            // Draw histogram as a circular plot
+            polarCtx.beginPath();
+            
+            for (let i = 0; i < bins; i++) {
+                const angle = (i / bins) * TWO_PI;
+                const nextAngle = ((i + 1) / bins) * TWO_PI;
+                const normalizedValue = histogramBins[i] / maxCount;
+                const plotRadius = radius * (0.3 + normalizedValue * 0.4);
+                
+                if (i === 0) {
+                    polarCtx.moveTo(
+                        centerX + plotRadius * Math.cos(angle),
+                        centerY + plotRadius * Math.sin(angle)
+                    );
+                } else {
+                    polarCtx.lineTo(
+                        centerX + plotRadius * Math.cos(angle),
+                        centerY + plotRadius * Math.sin(angle)
+                    );
+                }
+            }
+            
+            // Close the path
+            polarCtx.closePath();
+            polarCtx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+            polarCtx.fill();
+            
+            // Draw center point
+            polarCtx.fillStyle = '#333';
+            polarCtx.beginPath();
+            polarCtx.arc(centerX, centerY, 2, 0, TWO_PI);
+            polarCtx.fill();
+        }
+        
+        // Helper functions for color adjustments in polar plot
+        function makeColorMoreVivid(hslColor) {
+            // Extract the hue from the HSL color string
+            const hueMatch = hslColor.match(/hsl\((\d+)/);
+            if (hueMatch && hueMatch[1]) {
+                const hue = parseInt(hueMatch[1]);
+                // Return a more saturated and brighter color
+                return `hsl(${hue}, 100%, 60%)`;
+            }
+            return hslColor;
+        }
+        
+        function makeColorPaler(hslColor) {
+            // Extract the hue from the HSL color string
+            const hueMatch = hslColor.match(/hsl\((\d+)/);
+            if (hueMatch && hueMatch[1]) {
+                const hue = parseInt(hueMatch[1]);
+                // Return a less saturated color
+                return `hsl(${hue}, 70%, 70%)`;
+            }
+            return hslColor;
+        }
+        
+        // Calculate order parameter to detect phase transitions
+        function calculateOrderParameter() {
+            if (agents.length === 0) {
+                orderParameter = 0;
+                document.getElementById('orderParameter').textContent = '0.00';
+                return;
+            }
+            
+            // Use vector order parameter for genetic parameters
+            let sinSum = 0;
+            let cosSum = 0;
+            
+            for (const agent of agents) {
+                sinSum += Math.sin(agent.geneticParam);
+                cosSum += Math.cos(agent.geneticParam);
+            }
+            
+            // Normalize by number of agents
+            sinSum /= agents.length;
+            cosSum /= agents.length;
+            
+            // Calculate magnitude of the order parameter vector
+            // Close to 1 means aligned/clustered, close to 0 means disordered/mixed
+            orderParameter = Math.sqrt(sinSum * sinSum + cosSum * cosSum);
+            document.getElementById('orderParameter').textContent = orderParameter.toFixed(2);
+        }
+        
+        // Detect clusters of agents with similar genetic parameters
+        function detectClusters() {
+            if (agents.length === 0) {
+                clusterCount = 0;
+                document.getElementById('clusterCount').textContent = '0';
+                return;
+            }
+            
+            // Use a simple density-based clustering
+            const processed = new Set();
+            const clusters = [];
+            const minClusterSize = 5;
+            
+            for (let i = 0; i < agents.length; i++) {
+                if (processed.has(i)) continue;
+                
+                const cluster = [i];
+                processed.add(i);
+                
+                // Find all agents that are genetically similar to this one
+                for (let j = 0; j < agents.length; j++) {
+                    if (i === j || processed.has(j)) continue;
+                    
+                    const distance = geneticDistance(agents[i].geneticParam, agents[j].geneticParam);
+                    const normalizedDistance = distance / Math.PI;
+                    
+                    if (normalizedDistance < params.geneticThreshold * 1.5) {
+                        cluster.push(j);
+                        processed.add(j);
+                    }
+                }
+                
+                if (cluster.length >= minClusterSize) {
+                    clusters.push(cluster);
+                }
+            }
+            
+            clusterCount = clusters.length;
+            document.getElementById('clusterCount').textContent = clusterCount;
+        }
+        
+        // Update the phase indicator based on order parameter and clusters
+        function updatePhaseIndicator() {
+            const phaseIndicator = document.getElementById('phaseIndicator');
+            const alignmentDescription = document.getElementById('alignmentDescription');
+            const avgVelocityElement = document.getElementById('avgVelocity');
+            const avgAlignmentElement = document.getElementById('avgAlignment');
+            const minVelocityElement = document.getElementById('minVelocity');
+            const maxVelocityElement = document.getElementById('maxVelocity');
+            const minAlignmentElement = document.getElementById('minAlignment');
+            const maxAlignmentElement = document.getElementById('maxAlignment');
+            
+            if (agents.length < 50) {
+                phaseIndicator.textContent = 'Phase: Population too small';
+                phaseIndicator.style.backgroundColor = '#ddd';
+                alignmentDescription.textContent = 'N/A';
+                
+                if (avgVelocityElement) avgVelocityElement.textContent = '0.0';
+                if (avgAlignmentElement) avgAlignmentElement.textContent = '0.0';
+                return;
+            }
+            
+            // Calculate average properties and find min/max values
+            let totalVelocity = 0;
+            let totalAlignment = 0;
+            
+            let minVelocity = Infinity;
+            let maxVelocity = -Infinity;
+            let minAlignment = Infinity;
+            let maxAlignment = -Infinity;
+            
+            for (const agent of agents) {
+                // Sum for averages
+                totalVelocity += agent.velocity;
+                totalAlignment += agent.alignmentStrength;
+                
+                // Update min/max
+                minVelocity = Math.min(minVelocity, agent.velocity);
+                maxVelocity = Math.max(maxVelocity, agent.velocity);
+                minAlignment = Math.min(minAlignment, agent.alignmentStrength);
+                maxAlignment = Math.max(maxAlignment, agent.alignmentStrength);
+            }
+            
+            const avgVelocity = totalVelocity / agents.length;
+            const avgAlignment = totalAlignment / agents.length;
+            
+            // Update main averages
+            if (avgVelocityElement) avgVelocityElement.textContent = avgVelocity.toFixed(2);
+            if (avgAlignmentElement) avgAlignmentElement.textContent = avgAlignment.toFixed(2);
+            
+            // Update min/max ranges
+            if (minVelocityElement) minVelocityElement.textContent = minVelocity.toFixed(1);
+            if (maxVelocityElement) maxVelocityElement.textContent = maxVelocity.toFixed(1);
+            if (minAlignmentElement) minAlignmentElement.textContent = minAlignment.toFixed(1);
+            if (maxAlignmentElement) maxAlignmentElement.textContent = maxAlignment.toFixed(1);
+            
+            // Update alignment behavior description based on global threshold
+            if (params.geneticThreshold < 0.15) {
+                alignmentDescription.textContent = 'Strong preference for similar genetic types';
+            } else if (params.geneticThreshold < 0.25) {
+                alignmentDescription.textContent = 'Moderate alignment with similar types, anti-alignment with different';
+            } else if (params.geneticThreshold < 0.35) {
+                alignmentDescription.textContent = 'Weak genetic preference, more mixing';
+            } else {
+                alignmentDescription.textContent = 'Very tolerant, mostly aligns with others';
+            }
+            
+            // Update phase indicator
+            if (orderParameter < 0.2) {
+                phaseIndicator.textContent = 'Phase: Mixed (Disordered)';
+                phaseIndicator.style.backgroundColor = '#FFEB3B';
+            } else if (orderParameter < 0.5) {
+                if (clusterCount >= 2) {
+                    phaseIndicator.textContent = `Phase: Multiple Species (${clusterCount} clusters)`;
+                    phaseIndicator.style.backgroundColor = '#4CAF50';
+                } else {
+                    phaseIndicator.textContent = 'Phase: Transitional';
+                    phaseIndicator.style.backgroundColor = '#FF9800';
+                }
+            } else {
+                if (clusterCount <= 1) {
+                    phaseIndicator.textContent = 'Phase: Monoculture (Single Species)';
+                    phaseIndicator.style.backgroundColor = '#2196F3';
+                } else {
+                    phaseIndicator.textContent = `Phase: Distinct Species (${clusterCount} clusters)`;
+                    phaseIndicator.style.backgroundColor = '#9C27B0';
+                }
+            }
+        }
+        
+        // Update UI elements to match parameters
+        function updateUIFromParams() {
+            // Update slider values
+            document.getElementById('initialPopulation').value = params.initialPopulation;
+            document.getElementById('initialPopulationValue').textContent = params.initialPopulation;
+            
+            document.getElementById('initialDiversity').value = params.initialDiversity;
+            document.getElementById('initialDiversityValue').textContent = params.initialDiversity;
+            
+            document.getElementById('velocity').value = params.velocity;
+            document.getElementById('velocityValue').textContent = params.velocity;
+            
+            document.getElementById('interactionRadius').value = params.interactionRadius;
+            document.getElementById('interactionRadiusValue').textContent = params.interactionRadius;
+            
+            document.getElementById('noiseLevel').value = params.noiseLevel;
+            document.getElementById('noiseLevelValue').textContent = params.noiseLevel;
+            
+            document.getElementById('alignmentStrength').value = params.alignmentStrength;
+            document.getElementById('alignmentStrengthValue').textContent = params.alignmentStrength;
+            
+            document.getElementById('geneticThreshold').value = params.geneticThreshold;
+            document.getElementById('geneticThresholdValue').textContent = params.geneticThreshold;
+            
+            document.getElementById('pairwiseInteraction').checked = params.pairwiseInteraction;
+            
+            document.getElementById('replicationRate').value = params.replicationRate;
+            document.getElementById('replicationRateValue').textContent = params.replicationRate;
+            
+            document.getElementById('mutationRate').value = params.mutationRate;
+            document.getElementById('mutationRateValue').textContent = params.mutationRate;
+            
+            document.getElementById('mutationStrength').value = params.mutationStrength;
+            document.getElementById('mutationStrengthValue').textContent = params.mutationStrength;
+            
+            document.getElementById('selectionStrength').value = params.selectionStrength;
+            document.getElementById('selectionStrengthValue').textContent = params.selectionStrength;
+            
+            document.getElementById('maxCapacity').value = params.maxCapacity;
+            document.getElementById('maxCapacityValue').textContent = params.maxCapacity;
+        }
+        
+        // Set up event listeners
+        function setupEventListeners() {
+            // Play/Pause button
+            document.getElementById('playPauseBtn').addEventListener('click', function() {
+                running = !running;
+                this.textContent = running ? 'Pause' : 'Play';
+            });
+            
+            // Reset button
+            document.getElementById('resetBtn').addEventListener('click', function() {
+                createInitialAgents();
+            });
+            
+            // Initial population slider
+            document.getElementById('initialPopulation').addEventListener('input', function() {
+                params.initialPopulation = parseInt(this.value);
+                document.getElementById('initialPopulationValue').textContent = params.initialPopulation;
+            });
+            
+            // Initial diversity slider
+            document.getElementById('initialDiversity').addEventListener('input', function() {
+                params.initialDiversity = parseFloat(this.value);
+                document.getElementById('initialDiversityValue').textContent = params.initialDiversity;
+            });
+            
+            // Velocity slider
+            document.getElementById('velocity').addEventListener('input', function() {
+                params.velocity = parseFloat(this.value);
+                document.getElementById('velocityValue').textContent = params.velocity;
+            });
+            
+            // Interaction radius slider
+            document.getElementById('interactionRadius').addEventListener('input', function() {
+                params.interactionRadius = parseFloat(this.value);
+                document.getElementById('interactionRadiusValue').textContent = params.interactionRadius;
+            });
+            
+            // Noise level slider
+            document.getElementById('noiseLevel').addEventListener('input', function() {
+                params.noiseLevel = parseFloat(this.value);
+                document.getElementById('noiseLevelValue').textContent = params.noiseLevel;
+            });
+            
+            // Alignment strength slider
+            document.getElementById('alignmentStrength').addEventListener('input', function() {
+                params.alignmentStrength = parseFloat(this.value);
+                document.getElementById('alignmentStrengthValue').textContent = params.alignmentStrength;
+            });
+            
+            // Genetic threshold slider
+            document.getElementById('geneticThreshold').addEventListener('input', function() {
+                params.geneticThreshold = parseFloat(this.value);
+                document.getElementById('geneticThresholdValue').textContent = params.geneticThreshold;
+            });
+            
+            // Pairwise interaction checkbox
+            document.getElementById('pairwiseInteraction').addEventListener('change', function() {
+                params.pairwiseInteraction = this.checked;
+            });
+            
+
+            
+            // Replication rate slider
+            document.getElementById('replicationRate').addEventListener('input', function() {
+                params.replicationRate = parseFloat(this.value);
+                document.getElementById('replicationRateValue').textContent = params.replicationRate;
+            });
+            
+            // Mutation rate slider
+            document.getElementById('mutationRate').addEventListener('input', function() {
+                params.mutationRate = parseFloat(this.value);
+                document.getElementById('mutationRateValue').textContent = params.mutationRate;
+            });
+            
+            // Mutation strength slider
+            document.getElementById('mutationStrength').addEventListener('input', function() {
+                params.mutationStrength = parseFloat(this.value);
+                document.getElementById('mutationStrengthValue').textContent = params.mutationStrength;
+            });
+            
+            // Selection strength slider
+            document.getElementById('selectionStrength').addEventListener('input', function() {
+                params.selectionStrength = parseFloat(this.value);
+                document.getElementById('selectionStrengthValue').textContent = params.selectionStrength;
+            });
+            
+            // Max capacity slider
+            document.getElementById('maxCapacity').addEventListener('input', function() {
+                params.maxCapacity = parseInt(this.value);
+                document.getElementById('maxCapacityValue').textContent = params.maxCapacity;
+            });
+        }
+        
+        // Initialize everything when the page loads
+        window.onload = function() {
+            setupEventListeners();
+            init();
+        };
+    </script>
+</body>
+</html>
