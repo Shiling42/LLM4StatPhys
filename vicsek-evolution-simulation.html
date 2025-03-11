@@ -133,6 +133,7 @@
             <div class="metrics">
                 <div class="metric">Population: <span id="populationSize">0</span></div>
                 <div class="metric">Genetic Clusters: <span id="clusterCount">0</span></div>
+            <div class="metric">Alignment Behavior: <span id="alignmentDescription">Initializing...</span></div>
             </div>
         </div>
         <div class="controls">
@@ -160,18 +161,18 @@
                 <h3>Movement Parameters</h3>
                 <div class="control-item">
                     <label for="velocity">Velocity:</label>
-                    <input type="range" id="velocity" min="0.5" max="5" value="3" step="0.1">
-                    <span class="value-display" id="velocityValue">3</span>
+                    <input type="range" id="velocity" min="0.5" max="3" value="1" step="0.1">
+                    <span class="value-display" id="velocityValue">1</span>
                 </div>
                 <div class="control-item">
                     <label for="interactionRadius">Interaction Radius:</label>
-                    <input type="range" id="interactionRadius" min="10" max="100" value="50" step="5">
-                    <span class="value-display" id="interactionRadiusValue">50</span>
+                    <input type="range" id="interactionRadius" min="20" max="100" value="20" step="5">
+                    <span class="value-display" id="interactionRadiusValue">20</span>
                 </div>
                 <div class="control-item">
                     <label for="noiseLevel">Noise Level:</label>
-                    <input type="range" id="noiseLevel" min="0" max="1" value="0.1" step="0.05">
-                    <span class="value-display" id="noiseLevelValue">0.1</span>
+                    <input type="range" id="noiseLevel" min="0" max="1" value="0.3" step="0.05">
+                    <span class="value-display" id="noiseLevelValue">0.3</span>
                 </div>
             </div>
             
@@ -186,12 +187,16 @@
                     <label for="geneticThreshold">Genetic Threshold:</label>
                     <input type="range" id="geneticThreshold" min="0.05" max="0.5" value="0.2" step="0.05">
                     <span class="value-display" id="geneticThresholdValue">0.2</span>
+                    <div style="margin-left: 200px; font-size: 0.8em; color: #666;">
+                        (Lower values create more distinct species)
+                    </div>
                 </div>
                 <div class="control-item">
                     <label for="pairwiseInteraction">Pairwise Interaction:</label>
                     <input type="checkbox" id="pairwiseInteraction" checked>
                     <span class="description">(vs. average direction)</span>
                 </div>
+
             </div>
             
             <div class="control-group">
@@ -203,13 +208,13 @@
                 </div>
                 <div class="control-item">
                     <label for="mutationRate">Mutation Rate:</label>
-                    <input type="range" id="mutationRate" min="0" max="1" value="0.5" step="0.1">
-                    <span class="value-display" id="mutationRateValue">0.5</span>
+                    <input type="range" id="mutationRate" min="0" max="1" value="0.2" step="0.1">
+                    <span class="value-display" id="mutationRateValue">0.2</span>
                 </div>
                 <div class="control-item">
                     <label for="mutationStrength">Mutation Strength:</label>
-                    <input type="range" id="mutationStrength" min="0" max="0.2" value="0.2" step="0.01">
-                    <span class="value-display" id="mutationStrengthValue">0.2</span>
+                    <input type="range" id="mutationStrength" min="0" max="0.2" value="0.05" step="0.01">
+                    <span class="value-display" id="mutationStrengthValue">0.05</span>
                 </div>
                 <div class="control-item">
                     <label for="selectionStrength">Selection Strength:</label>
@@ -218,7 +223,7 @@
                 </div>
                 <div class="control-item">
                     <label for="maxCapacity">Max Capacity:</label>
-                    <input type="range" id="maxCapacity" min="200" max="2000" value="500" step="200">
+                    <input type="range" id="maxCapacity" min="200" max="1000" value="500" step="50">
                     <span class="value-display" id="maxCapacityValue">500</span>
                 </div>
             </div>
@@ -228,19 +233,19 @@
     <script>
         // Simulation parameters
         const params = {
-            initialPopulation: 300,
+            initialPopulation: 200,
             initialDiversity: 0.2,
-            velocity: 3,
-            interactionRadius: 50,
-            noiseLevel: 0.8,
-            alignmentStrength: 0.8,
+            velocity: 2,
+            interactionRadius: 20,
+            noiseLevel: 0.5,
+            alignmentStrength: 0.5,
             geneticThreshold: 0.2,
             pairwiseInteraction: true,
-            replicationRate: 0.1,
+            replicationRate: 0.002,
             mutationRate: 0.2,
             mutationStrength: 0.05,
-            selectionStrength: 0.05,
-            maxCapacity: 500
+            selectionStrength: 0.1,
+            maxCapacity: 900
         };
 
         // Simulation state
@@ -399,13 +404,16 @@
                             // Add neighbor's direction weighted by alignment strength
                             if (alignmentStrength >= 0) {
                                 // Positive alignment: move in similar direction
+                                // Similar genetic parameters cause alignment
                                 sinSum += alignmentStrength * Math.sin(neighbor.theta);
                                 cosSum += alignmentStrength * Math.cos(neighbor.theta);
                             } else {
                                 // Negative alignment: move away from direction
+                                // Different genetic parameters cause anti-alignment (move in opposite direction)
                                 // Using the opposite direction (adding π rotates by 180°)
-                                sinSum += alignmentStrength * Math.sin(neighbor.theta + Math.PI);
-                                cosSum += alignmentStrength * Math.cos(neighbor.theta + Math.PI);
+                                const antiAlignStrength = Math.abs(alignmentStrength);
+                                sinSum += antiAlignStrength * Math.sin(neighbor.theta + Math.PI);
+                                cosSum += antiAlignStrength * Math.cos(neighbor.theta + Math.PI);
                             }
                         }
                     } else {
@@ -775,13 +783,27 @@
         // Update the phase indicator based on order parameter and clusters
         function updatePhaseIndicator() {
             const phaseIndicator = document.getElementById('phaseIndicator');
+            const alignmentDescription = document.getElementById('alignmentDescription');
             
             if (agents.length < 50) {
                 phaseIndicator.textContent = 'Phase: Population too small';
                 phaseIndicator.style.backgroundColor = '#ddd';
+                alignmentDescription.textContent = 'N/A';
                 return;
             }
             
+            // Update alignment behavior description
+            if (params.geneticThreshold < 0.15) {
+                alignmentDescription.textContent = 'Strong preference for similar genetic types';
+            } else if (params.geneticThreshold < 0.25) {
+                alignmentDescription.textContent = 'Moderate alignment with similar types, anti-alignment with different';
+            } else if (params.geneticThreshold < 0.35) {
+                alignmentDescription.textContent = 'Weak genetic preference, more mixing';
+            } else {
+                alignmentDescription.textContent = 'Very tolerant, mostly aligns with others';
+            }
+            
+            // Update phase indicator
             if (orderParameter < 0.2) {
                 phaseIndicator.textContent = 'Phase: Mixed (Disordered)';
                 phaseIndicator.style.backgroundColor = '#FFEB3B';
@@ -905,6 +927,8 @@
             document.getElementById('pairwiseInteraction').addEventListener('change', function() {
                 params.pairwiseInteraction = this.checked;
             });
+            
+
             
             // Replication rate slider
             document.getElementById('replicationRate').addEventListener('input', function() {
